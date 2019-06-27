@@ -17,12 +17,12 @@ var searchNotyfications = function(typeENG, typeCode, typePL, dir) {
                 var tableString = [];
                 var index = 0;
 
-                //filtruje linie tak aby zawierały litery i miały co najmniej 8 znaków. 
+                //filtruje linie tak aby miały co najmniej 4 znaki (mogą zawierac litery i cyfry). 
                 var regExp = /[a-z0-9_ ]{4,}/
                 res.line = _.filter(res.line, function(line) {
                     return regExp.test(line)
                 })
-                //_.each(res.line,function(line) {
+
                 for(var i=0; i < res.line.length; i++) {
                     var splittedArr = _.filter(res.line[i].split(''), function(el) {
                         return el != '	'
@@ -97,18 +97,18 @@ var searchNotyfications = function(typeENG, typeCode, typePL, dir) {
                         })
                     }
                 }
-                //})
+
                 tableString = _.uniq(tableString, 'withoutIndex')
 
                 _.each(tableString, function(el) {
                     finnalyStr += el.withIndex
                 })
 
-                var test = typeENG + " " + fileNameCut + '-notyfications'
+                var outputFile = typeENG + " " + fileNameCut + '-notyfications'
                 
                 if (!_.isEmpty(tableString)) {
                     indexFiles++
-                    fs.writeFile("./" + indexFiles+test + ".txt", finnalyStr, function(err) {
+                    fs.writeFile("./" + indexFiles + outputFile + ".txt", finnalyStr, function(err) {
                         if(err) {
                             return console.log(err);
                         }
