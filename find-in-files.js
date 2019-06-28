@@ -4,13 +4,15 @@ var findInFiles = require('find-in-files');
 
 var searchNotyfications = function(typeENG, typeCode, typePL, dir) {
     var indexFiles = 0;
-    findInFiles.find("", '.', 'Logs.xtend$')
+    findInFiles.find("", '.', '.xtend$')
         .then(function (results) {
             for (var result in results) {
                 if (!_.isObject(result)) {
                     var dirName = result;
                     var indexStartFile = _.lastIndexOf(result, "\\")
-                    var fileNameCut = result.substr(indexStartFile+1, result.length)
+                    var lastIndexDot = _.lastIndexOf(result, ".")
+                    var fileName = result.substr(indexStartFile+1)
+                    var fileNameCut = result.slice(indexStartFile+1, lastIndexDot)
                 }
                 var res = results[result];
                 var finnalyStr = ""
@@ -24,27 +26,32 @@ var searchNotyfications = function(typeENG, typeCode, typePL, dir) {
                 })
 
                 for(var i=0; i < res.line.length; i++) {
-                    var splittedArr = _.filter(res.line[i].split(''), function(el) {
+                    var splittedLine = _.filter(res.line[i].split(''), function(el) {
                         return el != '	'
                     })
                     
-                    var line = splittedArr.join('')
+                    var line = splittedLine.join('')
                     var fstRegEx = new RegExp("\\" + typeENG+ '\\(')
                     var secRegEx = new RegExp("\\" + typeENG+ "\\(")
 
                     //sprawdzam czy dana linia posiada kluczowe słowo: error/warning/success
-                    if (fstRegEx.test(line) || secRegEx.test(line)) {  
+                    if (fstRegEx.test(line) || secRegEx.test(line)) {
                         index++;
-                        var lineSplitted = line.split('')
+
+                        var moduleName = ""
+                        if (fileName.toLowerCase().indexOf('travel') > -1) { 
+                            moduleName = "TRAVEL" 
+                        } else if (fileName.toLowerCase().indexOf('socfund') > -1) {
+                            moduleName = "ZFŚS"
+                        }
 
                         //sprawdzam czy aktualna linia kończy się ciągiem znaków '('
-                        if (line.indexOf(typeENG + '(') && (_.last(lineSplitted) == "(" || _.last(lineSplitted) == "('")) {
+                        if (line.indexOf(typeENG + '(') && (_.last(splittedLine) == "(" || _.last(splittedLine) == "('")) {
 
                             var nextLine = res.line[i+1]
-                            var nextSplittedLine = _.filter(res.line[i+1].split(''), function(el) {
+                            var nextLineSplitted = _.filter(res.line[i+1].split(''), function(el) {
                                 return el != '	'
                             })
-
                             //ustawiam końcowy index dla następnej linii.
                             if (nextLine.indexOf('")') > -1) {
                                 var indexEnd = nextLine.indexOf('")')
@@ -58,11 +65,11 @@ var searchNotyfications = function(typeENG, typeCode, typePL, dir) {
                                 var indexEnd = _.lastIndexOf(nextLine, "'")
                             }
                             //jezeli aktualna linia konczy się otwartym nawiasem to sprawdzam czy nastepna linia zaczyna się od komunikatu '""
-                            if (_.first(nextSplittedLine) == "'" || _.first(nextSplittedLine) == '"') {
+                            if (_.first(nextLineSplitted) == "'" || _.first(nextLineSplitted) == '"') {
                                 var indexStart = nextLine.indexOf('"')
                                 if (indexStart == -1) { indexStart = nextLine.indexOf("'")}
                                 var resultStr = nextLine.slice(indexStart+1, indexEnd)
-                                var stringToTable = index + ". \t" + dirName + " \t" + typePL + " \t" + typeCode + " \t " + resultStr + '\n'
+                                var stringToTable = index + ". \t" + dirName + " \t" + fileName + " \t" + moduleName + " \t" + typePL + " \t" + typeCode + " \t " + resultStr + '\n'
                                 var stringToTableWithoutIndex = dirName + " \t" + typePL + " \t" + typeCode + " \t " + resultStr + '\n'
                                 if (stringToTable.indexOf('", "') > -1) {
                                     stringToTable = stringToTable.replace('", "', "")
@@ -84,7 +91,7 @@ var searchNotyfications = function(typeENG, typeCode, typePL, dir) {
                             var indexStart = line.indexOf('("')
                             if (indexStart == -1) { indexStart = line.indexOf("('")}
                             var resultStr = line.slice(indexStart+2, indexEnd)
-                            var stringToTable = index + ". \t" + dirName + " \t" + typePL + " \t" + typeCode + " \t " + resultStr + '\n'
+                            var stringToTable = index + ". \t" + dirName + " \t" + fileName + " \t" + moduleName + " \t" + typePL + " \t" + typeCode + " \t " + resultStr + '\n'
                             var stringToTableWithoutIndex = dirName + " \t" + typePL + " \t" + typeCode + " \t " + resultStr + '\n'
                             if (stringToTable.indexOf('", "') > -1) {
                                 stringToTable = stringToTable.replace('", "', "")
@@ -119,4 +126,4 @@ var searchNotyfications = function(typeENG, typeCode, typePL, dir) {
         });   
 
 }
-searchNotyfications('error', 'E', 'Błąd');
+searchNotyfications('warning', 'W', 'Ostrzeżenie');
